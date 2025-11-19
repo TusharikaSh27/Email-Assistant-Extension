@@ -1,4 +1,4 @@
-console.log("Email Assistant");
+console.log("Email Assistant Loaded");
 
 /* ----------------------------------------------------
    GET EMAIL CONTENT
@@ -13,32 +13,36 @@ function getEmailContent() {
 
     for (const selector of selectors) {
         const content = document.querySelector(selector);
-        if (content) {
-            return content.innerText.trim();
-        }
+        if (content) return content.innerText.trim();
     }
 
     return '';
 }
 
 /* ----------------------------------------------------
-   FIND COMPOSE TOOLBAR
+   FIND COMPOSE OR REPLY TOOLBAR
 ---------------------------------------------------- */
 function findComposeToolbar() {
-    const selectors = ['.btC', '.aDh', '[role="toolbar"]', '.gU.Up'];
+    const selectors = [
+        '.btC',                   // New compose bottom toolbar
+        '.aDh',                   // Compose formatting bar
+        '.amn',                   // INLINE REPLY TOOLBAR (IMPORTANT)
+        '.gU.Up',                 // Reply “send” area
+        '[aria-label="More options"]',
+        '[role="toolbar"]',
+        '[gh="mtb"]'
+    ];
 
     for (const selector of selectors) {
         const toolbar = document.querySelector(selector);
-        if (toolbar) {
-            return toolbar;
-        }
+        if (toolbar) return toolbar;
     }
 
     return null;
 }
 
 /* ----------------------------------------------------
-   CREATE BUTTON
+   CREATE AI BUTTON
 ---------------------------------------------------- */
 function createAIButton() {
     const button = document.createElement('div');
@@ -51,7 +55,7 @@ function createAIButton() {
 }
 
 /* ----------------------------------------------------
-   INJECT BUTTON
+   INJECT AI BUTTON
 ---------------------------------------------------- */
 function injectButton() {
     const existingButton = document.querySelector('.ai-reply-button');
@@ -59,11 +63,11 @@ function injectButton() {
 
     const toolbar = findComposeToolbar();
     if (!toolbar) {
-        console.log("Toolbar not found");
+        console.log("Toolbar not found yet...");
         return;
     }
 
-    console.log("Toolbar found — adding AI button");
+    console.log("Toolbar found — injecting AI button");
 
     const button = createAIButton();
 
@@ -71,6 +75,7 @@ function injectButton() {
         try {
             button.innerHTML = 'Generating...';
             button.style.opacity = '0.6';
+            button.disabled = true;
 
             const emailContent = getEmailContent();
 
@@ -87,9 +92,7 @@ function injectButton() {
 
             const generatedReply = await response.text();
 
-            const composeBox = document.querySelector(
-                '[role="textbox"][g_editable="true"]'
-            );
+            const composeBox = document.querySelector('[role="textbox"][g_editable="true"]');
 
             if (composeBox) {
                 composeBox.focus();
@@ -101,9 +104,8 @@ function injectButton() {
 
         } finally {
             button.innerHTML = 'AI Reply';
-
             button.style.opacity = '1';
-            button.disabled=false;
+            button.disabled = false;
         }
     });
 
@@ -111,28 +113,37 @@ function injectButton() {
 }
 
 /* ----------------------------------------------------
-   MUTATION OBSERVER
+   OBSERVE FOR COMPOSE & REPLY WINDOWS
 ---------------------------------------------------- */
 const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
-        const addedNodes = Array.from(mutation.addedNodes);
+        const addedNodes = [...mutation.addedNodes];
 
-        const hasComposeElements = addedNodes.some(node =>
+        const hasComposeOrReply = addedNodes.some(node =>
             node.nodeType === Node.ELEMENT_NODE &&
             (
-                node.matches?.('.aDh, .btC, [role="dialog"]') ||
-                node.querySelector?.('.aDh, .btC, [role="dialog"]')
+                node.matches?.('.aDh, .btC, .amn, [role="dialog"]') ||   // include REPLY toolbar
+                node.querySelector?.('.aDh, .btC, .amn, [role="dialog"]')
             )
         );
 
-        if (hasComposeElements) {
-            console.log("Compose Window Detected");
-            setTimeout(injectButton, 500);
+        if (hasComposeOrReply) {
+            console.log("Compose or Reply Window Detected");
+
+            let attempts = 0;
+            const interval = setInterval(() => {
+                attempts++;
+                const toolbar = findComposeToolbar();
+
+                if (toolbar) {
+                    injectButton();
+                    clearInterval(interval);
+                }
+
+                if (attempts > 10) clearInterval(interval);
+            }, 200);
         }
     }
 });
 
-observer.observe(document.body, {
-    childList: true,
-    subtree: true
-});
+observer.observe(document.body, { childList: true, subtree: true });
