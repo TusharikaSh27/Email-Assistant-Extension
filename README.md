@@ -36,18 +36,22 @@ cd email-assistant-extension
 ## 🖼️📸 Screenshots
 
 ### **AI Reply Button inside Gmail**
+<img width="1920" height="1080" alt="Screenshot (3)" src="https://github.com/user-attachments/assets/3fc78160-3908-45b5-98cb-ff676def3a06" />
+<img width="1920" height="1080" alt="Screenshot (4)" src="https://github.com/user-attachments/assets/06a71536-a324-47ca-be9b-d7e57cb9ebd2" />
 
-![Screenshot of AI Reply Button](screenshots/ai-button.png)
+
+![Screenshot of AI Reply Button]
 
 ### **Generated reply inserted in compose box**
+<img width="1920" height="1080" alt="Screenshot (5)" src="https://github.com/user-attachments/assets/9bd5dd14-437f-4da3-9278-9150828eca10" />
 
-![Screenshot of generated reply](screenshots/generated-reply.png)
+![Screenshot of generated reply]
 
 ---
 
 ## 🎥🎞️ Demo GIF
 
-Add your GIF inside a `demo/` folder and reference it:
+ GIF inside a `demo/` folder and reference it:
 
 ![Demo GIF](demo/demo.gif)
 
